@@ -108,21 +108,9 @@ def analyze_resume():
 
         resume_text = extract_text_from_pdf(
             file_path
+            
         )
-
-        print("========== RESUME TEXT ==========")
         print(resume_text)
-
-        # ================= EMPTY PDF CHECK =================
-
-        if not resume_text:
-
-            return jsonify({
-
-                "error":
-                "Could not extract text from PDF"
-
-            }), 400
 
         # ================= ATS SCORE =================
 
@@ -208,8 +196,6 @@ def analyze_resume():
 
     except Exception as e:
 
-        print("ERROR:", e)
-
         return jsonify({
 
             "error": str(e)
@@ -225,28 +211,20 @@ def analyze_resume():
 
 def get_history():
 
-    try:
+    history = list(
 
-        history = list(
-
-            analysis_collection.find(
-                {},
-                {
-                    "_id": 0
-                }
-            )
-
+        analysis_collection.find(
+            {},
+            {
+                "_id": 0
+            }
         )
 
-        history.reverse()
+    )
 
-        return jsonify(history)
+    history.reverse()
 
-    except Exception as e:
-
-        print("HISTORY ERROR:", e)
-
-        return jsonify([])
+    return jsonify(history)
 
 # ================= RUN APP =================
 

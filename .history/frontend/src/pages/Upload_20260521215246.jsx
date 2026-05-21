@@ -60,7 +60,7 @@ const Upload = () => {
         "job_description",
         jobDescription
       );
-      console.log("Sending Request...");
+
       const response = await axios.post(
         "https://resume-iq-amaz.onrender.com/analyze",
         formData

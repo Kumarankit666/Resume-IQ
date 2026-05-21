@@ -35,111 +35,21 @@ import {
   Line,
 } from "recharts";
 
-const trend = Array.from(
-  { length: 12 },
-  (_, i) => ({
-
-    m: [
-
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-
-    ][i],
-
-    resumes: Math.round(
-      200 +
-      Math.random() * 600 +
-      i * 50
-    ),
-
-    matches: Math.round(
-      80 +
-      Math.random() * 250 +
-      i * 30
-    ),
-
-  })
-);
-
-const skillData = [
-
-  {
-    skill: "React",
-    count: 612,
-  },
-
-  {
-    skill: "Python",
-    count: 580,
-  },
-
-  {
-    skill: "AWS",
-    count: 422,
-  },
-
-  {
-    skill: "SQL",
-    count: 391,
-  },
-
-  {
-    skill: "TS",
-    count: 355,
-  },
-
-  {
-    skill: "Docker",
-    count: 240,
-  },
-
-];
-
 const Dashboard = () => {
 
   const navigate =
     useNavigate();
 
-  const [profile, setProfile] =
-    useState(null);
-
   const [history, setHistory] =
     useState([]);
 
+  // ================= FETCH HISTORY =================
+
   useEffect(() => {
-
-    const savedProfile =
-      JSON.parse(
-
-        localStorage.getItem(
-          "resumeiq-profile"
-        )
-
-      );
-
-    if (savedProfile) {
-
-      setProfile(
-        savedProfile
-      );
-
-    }
 
     fetchHistory();
 
   }, []);
-
-  // ================= FETCH HISTORY =================
 
   const fetchHistory = async () => {
 
@@ -164,7 +74,58 @@ const Dashboard = () => {
 
   };
 
-  // ================= KPIs =================
+  // ================= TREND DATA =================
+
+  const trend = history.map(
+    (item, index) => ({
+
+      m:
+        item.resume_name?.slice(
+          0,
+          8
+        ) || `CV ${index + 1}`,
+
+      resumes:
+        item.ats_score,
+
+      matches:
+        item.ats_score,
+
+    })
+  );
+
+  // ================= SKILL DATA =================
+
+  const skillData = [
+
+    {
+      skill: "React",
+      count: 612,
+    },
+
+    {
+      skill: "Python",
+      count: 580,
+    },
+
+    {
+      skill: "AWS",
+      count: 422,
+    },
+
+    {
+      skill: "SQL",
+      count: 391,
+    },
+
+    {
+      skill: "Docker",
+      count: 240,
+    },
+
+  ];
+
+  // ================= KPI =================
 
   const kpis = [
 
@@ -178,7 +139,7 @@ const Dashboard = () => {
     {
       icon: Briefcase,
       label: "Open Roles Matched",
-      value: "2,108",
+      value: history.length,
       delta: "+8.1%",
     },
 
@@ -210,8 +171,8 @@ const Dashboard = () => {
 
     {
       icon: Users,
-      label: "Active Recruiters",
-      value: "1,024",
+      label: "Candidates",
+      value: history.length,
       delta: "+5.7%",
     },
 
@@ -357,15 +318,11 @@ const Dashboard = () => {
 
           <div className="lg:col-span-2 glass-card rounded-2xl p-5">
 
-            <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-white mb-3">
 
-              <p className="text-sm font-semibold text-white">
+              ATS Trend
 
-                Pipeline Volume
-
-              </p>
-
-            </div>
+            </p>
 
             <div className="h-64">
 
@@ -469,23 +426,19 @@ const Dashboard = () => {
 
         <div className="glass-card rounded-3xl p-8 mt-10">
 
-          <div className="flex items-center justify-between mb-8">
+          <div className="mb-8">
 
-            <div>
+            <h2 className="text-3xl font-bold text-white">
 
-              <h2 className="text-3xl font-bold text-white">
+              Resume History
 
-                Resume History
+            </h2>
 
-              </h2>
+            <p className="text-slate-400 mt-2">
 
-              <p className="text-slate-400 mt-2">
+              MongoDB powered ATS tracking
 
-                Track ATS performance over time
-
-              </p>
-
-            </div>
+            </p>
 
           </div>
 
@@ -534,7 +487,13 @@ const Dashboard = () => {
 
                   <th className="text-left py-4 text-slate-300">
 
-                    Resume
+                    Candidate
+
+                  </th>
+
+                  <th className="text-left py-4 text-slate-300">
+
+                    Email
 
                   </th>
 
@@ -566,7 +525,25 @@ const Dashboard = () => {
 
                       <td className="py-4 text-white">
 
-                        {item.resume_name}
+                        {
+
+                          item.candidate_name ||
+
+                          "Unknown"
+
+                        }
+
+                      </td>
+
+                      <td className="py-4 text-slate-300">
+
+                        {
+
+                          item.email ||
+
+                          "Not Found"
+
+                        }
 
                       </td>
 
@@ -582,7 +559,17 @@ const Dashboard = () => {
 
                       <td className="py-4 text-slate-400">
 
-                        {item.date}
+                        {
+
+                          item.date
+
+                            ? new Date(
+                                item.date
+                              ).toLocaleString()
+
+                            : "N/A"
+
+                        }
 
                       </td>
 

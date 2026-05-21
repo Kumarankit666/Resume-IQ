@@ -3,7 +3,6 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 
 import os
-import json
 
 from datetime import datetime
 
@@ -17,6 +16,10 @@ from ats_score import (
 
 from resume_analyzer import (
     analyze_resume_structure
+)
+
+from database import (
+    analysis_collection
 )
 
 # ================= APP =================
@@ -125,12 +128,6 @@ def analyze_resume():
             )
         )
 
-        # ================= ADD NLP DATA =================
-
-        result["structure_analysis"] = (
-            structure_analysis
-        )
-
         # ================= CANDIDATE DETAILS =================
 
         result["candidate_name"] = (
@@ -154,30 +151,13 @@ def analyze_resume():
             )
         )
 
-        # ================= SAVE HISTORY =================
+        result["structure_analysis"] = (
+            structure_analysis
+        )
 
-        history_file = "history.json"
+        # ================= SAVE TO DATABASE =================
 
-        history_data = []
-
-        if os.path.exists(history_file):
-
-            with open(
-                history_file,
-                "r"
-            ) as file:
-
-                try:
-
-                    history_data = json.load(
-                        file
-                    )
-
-                except:
-
-                    history_data = []
-
-        history_item = {
+        analysis_collection.insert_one({
 
             "resume_name":
             resume.filename,
@@ -194,31 +174,19 @@ def analyze_resume():
             "ats_score":
             result["ats_score"],
 
+            "matched_skills":
+            result["matched_skills"],
+
+            "missing_skills":
+            result["missing_skills"],
+
+            "job_description":
+            job_description,
+
             "date":
-            datetime.now().strftime(
-                "%d-%m-%Y %H:%M"
-            )
+            datetime.now()
 
-        }
-
-        history_data.append(
-            history_item
-        )
-
-        with open(
-            history_file,
-            "w"
-        ) as file:
-
-            json.dump(
-
-                history_data,
-
-                file,
-
-                indent=4
-
-            )
+        })
 
         # ================= RETURN RESULT =================
 
@@ -241,24 +209,20 @@ def analyze_resume():
 
 def get_history():
 
-    history_file = "history.json"
+    history = list(
 
-    if not os.path.exists(
-        history_file
-    ):
+        analysis_collection.find(
+            {},
+            {
+                "_id": 0
+            }
+        )
 
-        return jsonify([])
-
-    with open(
-        history_file,
-        "r"
-    ) as file:
-
-        history = json.load(file)
-
-    return jsonify(
-        history[::-1]
     )
+
+    history.reverse()
+
+    return jsonify(history)
 
 # ================= RUN APP =================
 
@@ -268,6 +232,8 @@ if __name__ == "__main__":
 
         debug=True,
 
-        port=5000
+        port=5000,
+
+        threaded=True
 
     )

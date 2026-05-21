@@ -17,6 +17,8 @@ import { motion } from "framer-motion";
 
 import { useNavigate } from "react-router-dom";
 
+import axios from "axios";
+
 const defaultImage =
   "https://cdn-icons-png.flaticon.com/512/149/149071.png";
 
@@ -34,51 +36,76 @@ const Profile = () => {
   const [image, setImage] =
     useState(defaultImage);
 
+  const [role, setRole] =
+    useState("individual");
+
   // ================= LOAD PROFILE =================
 
   useEffect(() => {
 
     if (!user?.email) return;
 
-    const allProfiles =
-      JSON.parse(
-
-        localStorage.getItem(
-          "resumeiq-all-profiles"
-        ) || "{}"
-
-      );
-
-    const savedProfile =
-      allProfiles[user.email];
-
-    if (savedProfile) {
-
-      setName(
-        savedProfile.name || ""
-      );
-
-      setImage(
-        savedProfile.image ||
-        defaultImage
-      );
-
-    } else {
-
-      setName(
-        user?.displayName || ""
-      );
-
-      setImage(
-        user?.photoURL ||
-        defaultImage
-      );
-
-    }
+    fetchProfile();
 
   }, [user]);
 
-  // ================= IMAGE UPLOAD =================
+  // ================= FETCH PROFILE =================
+
+  const fetchProfile =
+    async () => {
+
+      try {
+
+        const response =
+          await axios.get(
+
+            `http://127.0.0.1:5000/profile/${user.email}`
+
+          );
+
+        if (
+          response.data
+        ) {
+
+          setName(
+
+            response.data.name ||
+
+            user.displayName ||
+
+            ""
+
+          );
+
+          setImage(
+
+            response.data.image ||
+
+            user.photoURL ||
+
+            defaultImage
+
+          );
+
+          setRole(
+
+            response.data.role ||
+
+            "individual"
+
+          );
+
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+      }
+
+    };
+
+  // ================= IMAGE =================
 
   const handleImageUpload = (
     e
@@ -89,7 +116,7 @@ const Profile = () => {
 
     if (!file) return;
 
-    // LIMIT 5MB
+    // LIMIT
 
     if (
       file.size >
@@ -115,91 +142,64 @@ const Profile = () => {
 
   // ================= SAVE PROFILE =================
 
-  const handleSave = () => {
+  const handleSave =
+    async () => {
 
-    try {
+      try {
 
-      const profileData = {
+        await axios.post(
 
-        name:
-          name || "User",
+          "http://127.0.0.1:5000/save-profile",
 
-        image,
+          {
 
-      };
+            email:
+              user.email,
 
-      // SAVE SEPARATE PROFILE
+            name,
 
-      const allProfiles =
-        JSON.parse(
+            image,
 
-          localStorage.getItem(
-            "resumeiq-all-profiles"
-          ) || "{}"
+            role,
 
-        );
-
-      allProfiles[user.email] =
-        profileData;
-
-      localStorage.setItem(
-
-        "resumeiq-all-profiles",
-
-        JSON.stringify(
-          allProfiles
-        )
-
-      );
-
-      alert(
-        "Profile updated successfully 🚀"
-      );
-
-      // ================= ROLE BASED REDIRECT =================
-
-      const usersData =
-        JSON.parse(
-
-          localStorage.getItem(
-            "resumeiq-users"
-          ) || "{}"
+          }
 
         );
 
-      const currentUser =
-        usersData[user.email];
-
-      if (
-
-        currentUser?.role ===
-        "recruiter"
-
-      ) {
-
-        navigate(
-          "/recruiter-dashboard"
+        alert(
+          "Profile updated successfully 🚀"
         );
 
-      } else {
+        // ================= REDIRECT =================
 
-        navigate(
-          "/dashboard"
+        if (
+          role ===
+          "recruiter"
+        ) {
+
+          navigate(
+            "/recruiter-dashboard"
+          );
+
+        } else {
+
+          navigate(
+            "/dashboard"
+          );
+
+        }
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Profile save failed"
         );
 
       }
 
-    } catch (error) {
-
-      console.log(error);
-
-      alert(
-        "Profile save failed"
-      );
-
-    }
-
-  };
+    };
 
   return (
 
@@ -272,6 +272,8 @@ const Profile = () => {
                   alt="profile"
                   className="w-56 h-56 rounded-full object-cover border-4 border-cyan-400 shadow-[0_0_35px_rgba(0,212,255,0.4)]"
                 />
+
+                {/* IMAGE */}
 
                 <label className="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center cursor-pointer shadow-[0_0_25px_rgba(0,212,255,0.5)]">
 
@@ -366,19 +368,7 @@ const Profile = () => {
 
                   <span className="text-cyan-300 font-semibold capitalize">
 
-                    {
-
-                      JSON.parse(
-
-                        localStorage.getItem(
-                          "resumeiq-users"
-                        ) || "{}"
-
-                      )[user?.email]?.role ||
-
-                      "individual"
-
-                    }
+                    {role}
 
                   </span>
 

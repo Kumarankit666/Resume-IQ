@@ -66,6 +66,8 @@ const Upload = () => {
         formData
       );
 
+      console.log(response.data);
+
       setResult(response.data);
 
       setLoading(false);
@@ -217,7 +219,7 @@ const Upload = () => {
 
               <div className="text-8xl font-bold neon-text">
 
-                {result.ats_score}%
+                {result.ats_score || 0}%
 
               </div>
 
@@ -245,7 +247,7 @@ const Upload = () => {
 
                 <div className="flex flex-wrap gap-3">
 
-                  {result.matched_skills.map(
+                  {result.matched_skills?.map(
                     (skill, index) => (
 
                       <span
@@ -280,7 +282,7 @@ const Upload = () => {
 
                 <div className="flex flex-wrap gap-3">
 
-                  {result.missing_skills.map(
+                  {result.missing_skills?.map(
                     (skill, index) => (
 
                       <span
@@ -311,7 +313,7 @@ const Upload = () => {
 
               <div className="space-y-4">
 
-                {result.feedback.map(
+                {result.feedback?.map(
                   (item, index) => (
 
                     <div
@@ -346,7 +348,7 @@ const Upload = () => {
 
                 <div className="space-y-4">
 
-                  {result.strengths.map(
+                  {result.strengths?.map(
                     (item, index) => (
 
                       <div
@@ -377,7 +379,7 @@ const Upload = () => {
 
                 <div className="space-y-4">
 
-                  {result.weaknesses.map(
+                  {result.weaknesses?.map(
                     (item, index) => (
 
                       <div
@@ -410,7 +412,7 @@ const Upload = () => {
 
               <div className="flex flex-wrap gap-3">
 
-                {result.resume_skills.map(
+                {result.resume_skills?.map(
                   (skill, index) => (
 
                     <span

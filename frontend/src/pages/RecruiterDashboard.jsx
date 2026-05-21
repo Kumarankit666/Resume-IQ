@@ -72,66 +72,123 @@ const RecruiterDashboard = () => {
         i++
       ) {
 
-        const formData =
-          new FormData();
+        try {
 
-        formData.append(
-          "resume",
-          resumes[i]
-        );
+          const formData =
+            new FormData();
 
-        formData.append(
-          "job_description",
-          jobDescription
-        );
-
-        const response =
-          await axios.post(
-
-            "http://127.0.0.1:5000/analyze",
-
-            formData
-
+          formData.append(
+            "resume",
+            resumes[i]
           );
 
-        allResults.push({
+          formData.append(
+            "job_description",
+            jobDescription
+          );
 
-          candidate_name:
-            response.data
-              .candidate_name,
+          const response =
+            await axios.post(
 
-          email:
-            response.data.email ||
-            "Not Found",
+              "http://127.0.0.1:5000/analyze",
 
-          phone:
-            response.data.phone,
+              formData,
 
-          ats_score:
-            response.data
-              .ats_score,
+              {
 
-          matched_skills:
-            response.data
-              .matched_skills
-              .join(", "),
+                timeout: 120000,
 
-          missing_skills:
-            response.data
-              .missing_skills
-              .join(", "),
+              }
 
-          jd_used:
-            jobDescription,
+            );
 
-          date:
-            new Date().toLocaleDateString(),
+          allResults.push({
 
-        });
+            candidate_name:
+              response.data
+                .candidate_name ||
+
+              "Not Found",
+
+            email:
+              response.data
+                .email ||
+
+              "Not Found",
+
+            phone:
+              response.data
+                .phone ||
+
+              "Not Found",
+
+            ats_score:
+              response.data
+                .ats_score || 0,
+
+            matched_skills:
+              response.data
+                .matched_skills
+                ?.join(", ") ||
+
+              "None",
+
+            missing_skills:
+              response.data
+                .missing_skills
+                ?.join(", ") ||
+
+              "None",
+
+            jd_used:
+              jobDescription,
+
+            date:
+              new Date().toISOString(),
+
+          });
+
+        } catch (error) {
+
+          console.log(
+            "Failed:",
+            resumes[i].name
+          );
+
+          // DON'T STOP PROCESS
+
+          allResults.push({
+
+            candidate_name:
+              resumes[i].name,
+
+            email:
+              "Failed",
+
+            phone:
+              "Failed",
+
+            ats_score: 0,
+
+            matched_skills:
+              "Failed",
+
+            missing_skills:
+              "Failed",
+
+            jd_used:
+              jobDescription,
+
+            date:
+              new Date().toISOString(),
+
+          });
+
+        }
 
       }
 
-      // ================= SORT HIGH SCORE FIRST =================
+      // ================= SORT HIGH ATS =================
 
       allResults.sort(
 
@@ -162,39 +219,7 @@ const RecruiterDashboard = () => {
 
   };
 
-  // ================= EXPORT EXCEL =================
-
-  const exportExcel = () => {
-
-    const worksheet =
-      XLSX.utils.json_to_sheet(
-        filteredResults
-      );
-
-    const workbook =
-      XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(
-
-      workbook,
-
-      worksheet,
-
-      "ATS Results"
-
-    );
-
-    XLSX.writeFile(
-
-      workbook,
-
-      "ResumeIQ_ATS_Report.xlsx"
-
-    );
-
-  };
-
-  // ================= DATE FILTER =================
+  // ================= FILTER =================
 
   const filteredResults =
     results.filter((item) => {
@@ -222,6 +247,40 @@ const RecruiterDashboard = () => {
       );
 
     });
+
+  // ================= EXPORT =================
+
+  const exportExcel = () => {
+
+    const worksheet =
+      XLSX.utils.json_to_sheet(
+
+        filteredResults
+
+      );
+
+    const workbook =
+      XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+
+      workbook,
+
+      worksheet,
+
+      "ATS Results"
+
+    );
+
+    XLSX.writeFile(
+
+      workbook,
+
+      "ResumeIQ_ATS_Report.xlsx"
+
+    );
+
+  };
 
   return (
 
@@ -256,6 +315,108 @@ const RecruiterDashboard = () => {
             Analyze unlimited resumes with AI-powered ATS ranking.
 
           </p>
+
+        </div>
+
+        {/* STATS */}
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+
+          {/* TOTAL */}
+
+          <div className="glass-card rounded-3xl p-6">
+
+            <p className="text-slate-400 mb-2">
+
+              Total CV Scanned
+
+            </p>
+
+            <h2 className="text-5xl font-bold neon-text">
+
+              {results.length}
+
+            </h2>
+
+          </div>
+
+          {/* HIGHEST */}
+
+          <div className="glass-card rounded-3xl p-6">
+
+            <p className="text-slate-400 mb-2">
+
+              Highest ATS
+
+            </p>
+
+            <h2 className="text-5xl font-bold text-cyan-300">
+
+              {
+
+                results.length > 0
+
+                ? Math.max(
+
+                    ...results.map(
+
+                      (r) =>
+                        r.ats_score
+                    )
+
+                  )
+
+                : 0
+
+              }%
+
+            </h2>
+
+          </div>
+
+          {/* AVG */}
+
+          <div className="glass-card rounded-3xl p-6">
+
+            <p className="text-slate-400 mb-2">
+
+              Average ATS
+
+            </p>
+
+            <h2 className="text-5xl font-bold text-purple-300">
+
+              {
+
+                results.length > 0
+
+                ? Math.round(
+
+                    results.reduce(
+
+                      (
+                        acc,
+                        curr
+                      ) =>
+
+                        acc +
+                        curr.ats_score,
+
+                      0
+
+                    ) /
+
+                    results.length
+
+                  )
+
+                : 0
+
+              }%
+
+            </h2>
+
+          </div>
 
         </div>
 

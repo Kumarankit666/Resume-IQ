@@ -4,6 +4,8 @@ from flask_cors import CORS
 
 import os
 
+from datetime import datetime
+
 from resume_parser import (
     extract_text_from_pdf
 )
@@ -14,6 +16,10 @@ from ats_score import (
 
 from resume_analyzer import (
     analyze_resume_structure
+)
+
+from database import (
+    analysis_collection
 )
 
 # ================= APP =================
@@ -170,9 +176,46 @@ def analyze_resume():
             structure_analysis
         )
 
-        # ================= TEMPORARY =================
+        # ================= SAVE TO DATABASE =================
 
-        print("Skipping MongoDB Save")
+        try:
+
+            analysis_collection.insert_one({
+
+                "resume_name":
+                resume.filename,
+
+                "candidate_name":
+                result["candidate_name"],
+
+                "email":
+                result["email"],
+
+                "phone":
+                result["phone"],
+
+                "ats_score":
+                result["ats_score"],
+
+                "matched_skills":
+                result["matched_skills"],
+
+                "missing_skills":
+                result["missing_skills"],
+
+                "job_description":
+                job_description,
+
+                "date":
+                datetime.now()
+
+            })
+
+            print("Data Saved Successfully")
+
+        except Exception as db_error:
+
+            print("MongoDB Error:", db_error)
 
         # ================= RETURN RESULT =================
 
@@ -197,7 +240,28 @@ def analyze_resume():
 
 def get_history():
 
-    return jsonify([])
+    try:
+
+        history = list(
+
+            analysis_collection.find(
+                {},
+                {
+                    "_id": 0
+                }
+            )
+
+        )
+
+        history.reverse()
+
+        return jsonify(history)
+
+    except Exception as e:
+
+        print("HISTORY ERROR:", e)
+
+        return jsonify([])
 
 # ================= RUN APP =================
 

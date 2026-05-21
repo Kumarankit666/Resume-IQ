@@ -63,8 +63,8 @@ const Upload = () => {
       console.log("Sending Request...");
       const response = await axios.post(
         "https://resume-iq-amaz.onrender.com/analyze",
-        formData,
-          {
+        formData
+       {
         timeout: 120000,
         headers: {
         "Content-Type":
